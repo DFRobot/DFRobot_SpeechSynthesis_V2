@@ -182,7 +182,7 @@ void DFRobot_SpeechSynthesis::reset(){
 }
 
 void DFRobot_SpeechSynthesis::speak(String word){
-  Serial.println("String");
+  //Serial.println("String");
   uint32_t uni=0;
   uint8_t utf8State = 0;
   DBG("\n");
@@ -708,7 +708,7 @@ uint8_t ack = 0;
 uint8_t DFRobot_SpeechSynthesis_I2C::sendCommand(uint8_t *head,uint8_t *data,uint16_t length)
 {
 	 uint16_t lenTemp = 0;
-  Serial.println(length);
+  //Serial.println(length);
   _pWire->beginTransmission(_deviceAddr);
   for(uint8_t i =0;i<5;i++){
      _pWire->write(head[i]);
