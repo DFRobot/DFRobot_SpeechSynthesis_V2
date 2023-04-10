@@ -1,7 +1,7 @@
 /*!
  * @file i2c.ino
  * @brief Control speech synthesis sensor via I2C, and synthetise speech 
- * @details phenomena£ºthe speaker of the module plays English on a loop
+ * @details phenomenaÂ£Âºthe speaker of the module plays English on a loop
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
  * @license     The MIT License (MIT)
  * @author [fengli](li.feng@dfrobot.com)
@@ -18,8 +18,6 @@ void setup() {
   //ss.setVolume(5);
   //Set playback speed to 5
   //ss.setSpeed(5);
-  //Set speaker to female 
-  //ss.setSoundType(ss.FEMALE1);
   //Set tone to 5
   //ss.setTone(5);
   //For English, speak word 
