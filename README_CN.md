@@ -41,7 +41,7 @@ To use this library, first download the library file, paste it into the \Arduino
    *  @brief 设置语音的音量大小
    *  @param voc,音量数值(0-9)
    */
-  void setVoice(uint8_t voc);
+  void setVolume(uint8_t voc);
 
   /**
    *  @brief 设置语音的播放速度

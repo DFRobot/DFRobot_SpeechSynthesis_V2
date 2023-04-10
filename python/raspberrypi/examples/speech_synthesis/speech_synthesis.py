@@ -5,7 +5,7 @@
   @brief speech synthesis
   @n note: it takes time to stable alcohol concentration, about 1 minutes.
   @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
-  @licence     The MIT License (MIT)
+  @License     The MIT License (MIT)
  * @author [fengli](li.feng@dfrobot.com)
   version  V1.0
   date  2020-09-09

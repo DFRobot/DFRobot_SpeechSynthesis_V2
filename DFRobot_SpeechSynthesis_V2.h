@@ -3,7 +3,7 @@
  * @brief Basic structure of DFRobot_SpeechSynthesis class
  * @details Synthesize the sound you need, support Chinese, English
  * @copyright   Copyright (c) 2010 DFRobot Co.Ltd (http://www.dfrobot.com)
- * @licence     The MIT License (MIT)
+ * @License     The MIT License (MIT)
  * @author [fengli](li.feng@dfrobot.com)
  * @version  V1.0
  * @date  2020-08-17

@@ -11,13 +11,17 @@ DFRobot_SpeechSynthesis_V2	KEYWORD1
 #######################################
 # Methods and Functions (KEYWORD2)
 #######################################
+
 DFRobot_SpeechSynthesis_UART	KEYWORD1
 DFRobot_SpeechSynthesis_I2C	KEYWORD1
 begin	KEYWORD2
+
+speak	KEYWORD2
 sleep	KEYWORD2
 wakeup	KEYWORD2
-setVoice	KEYWORD2
+setVolume	KEYWORD2
 setSpeed	KEYWORD2
+setSoundType	KEYWORD2
 setTone	KEYWORD2
 setEnglishPron	KEYWORD2
 reset	KEYWORD2
@@ -27,8 +31,6 @@ setNamePron	KEYWORD2
 setZeroPron	KEYWORD2
 setLanguage	KEYWORD2
 enablePINYIN	KEYWORD2
-
-
 setSpeechStyle	KEYWORD2
 setDigitalPron	KEYWORD2
 stopSynthesis	KEYWORD2
@@ -36,7 +38,7 @@ pauseSynthesis	KEYWORD2
 recoverSynthesis	KEYWORD2
 wait	KEYWORD2
 speakElish	KEYWORD2
-speak	KEYWORD2
+
 
 #######################################
 # Instances (KEYWORD2)
@@ -45,6 +47,7 @@ speak	KEYWORD2
 eChinese	LITERAL1
 eEnglish	LITERAL1
 eNone	LITERAL1
+
 eCaton	LITERAL1
 eSmooth	LITERAL1
 ePinyinEnable	LITERAL1
@@ -53,8 +56,6 @@ eChinesel	LITERAL1
 eEnglishl	LITERAL1
 eAutoJudgel	LITERAL1
 eNumber	LITERAL1
-
-
 eNumeric	LITERAL1
 eAutoJudged	LITERAL1
 eZreo	LITERAL1
@@ -63,39 +64,14 @@ eYao	LITERAL1
 eChone	LITERAL1
 eName	LITERAL1
 eAutoJudgedn	LITERAL1
-MALE	LITERAL1
-FEMALE	LITERAL1
-DONALDDUCK	LITERAL1
+
 eAlphabet	LITERAL1
 eWord	LITERAL1
+
 eFemale1	LITERAL1
 eMale1	LITERAL1
 eMale2	LITERAL1
 eFemale2	LITERAL1
 eDonaldDuck	LITERAL1
 eFemale3	LITERAL1
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
