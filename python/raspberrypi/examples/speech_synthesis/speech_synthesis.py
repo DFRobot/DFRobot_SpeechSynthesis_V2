@@ -19,7 +19,6 @@ from sys import version_info
 if version_info.major == 2 and version_info.minor == 7:
    reload(sys)  
    sys.setdefaultencoding('gbk') 
-COLLECT_NUMBER   = 1               # collect number, the collection range is 1-100
 I2C_MODE         = 0x01            # default use I2C1 
 
 alcohol = DFRobot_SpeechSynthesis_I2C (I2C_MODE ,I2C_ADDR)

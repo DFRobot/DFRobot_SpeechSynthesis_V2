@@ -12,6 +12,7 @@
 #include "DFRobot_SpeechSynthesis_V2.h"
 DFRobot_SpeechSynthesis_I2C ss;
 void setup() {
+  Serial.begin(115200);
   //Init speech synthesis sensor
   ss.begin();
   //Set voice volume to 5
@@ -26,8 +27,9 @@ void setup() {
 
 void loop() {
   ss.speak(F("She sells seashells by the seashore"));
-  ss.speak(F("Hello, I'm Speech Synthesis module"));
-  ss.speak(F("a b c d e f g"));
+  delay(1000);
+  // ss.speak(F("Hello, I'm Speech Synthesis module"));
+  // ss.speak(F("a b c d e f g"));
 
   /*Use text control identifier*/
   //Voice volume identifier 
