@@ -36,7 +36,7 @@ void setup() {
   //Set tone to 5
   //ss.setTone(5);
   //For English, speak word 
-  //ss.setEnglishPron(ss.WORD);
+  //ss.setEnglishPron(ss.eWord);
 }
 
 void loop() {
