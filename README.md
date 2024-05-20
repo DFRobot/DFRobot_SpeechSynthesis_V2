@@ -107,6 +107,7 @@ micro:bit        |      √       |              |             |
 
 
 - 2020/12/06 - Version 1.0.0 released.
+- 2024/05/20 - Version 1.0.1 released.
 
 
 ## Credits

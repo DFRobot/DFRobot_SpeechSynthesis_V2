@@ -11,7 +11,7 @@
 """
 import serial
 import time
-import smbus
+from smbus2 import SMBus, i2c_msg
 import array
 import numpy as np
 from sys import version_info
@@ -63,14 +63,12 @@ class DFRobot_SpeechSynthesis(object):
 
     __txbuf = [0]  # i2c send buffer
     __alcoholdata = [0] * 101  # alcohol data
-    __uart_i2c = 0
 
     def __init__(self, bus, Baud):
         if bus != 0:
-            self.i2cbus = smbus.SMBus(bus)
-            self.__uart_i2c = I2C_MODE
+            self._i2c = SMBus(bus)
             for i in range(0, 40):
-                self.i2cbus.write_byte(I2C_ADDR, 0xAA)
+                self._i2c.write_byte(self._addr, 0xAA)
                 time.sleep(0.05)
                 check = [0xFD, 0x00, 0x01, 0x21]
                 time.sleep(0.1)
@@ -80,11 +78,16 @@ class DFRobot_SpeechSynthesis(object):
                     break
         else:
             self.ser = serial.Serial(
-                "/dev/ttyAMA0", baudrate=Baud, stopbits=1, timeout=0.5
+                "/dev/ttyAMA0",
+                baudrate=Baud,
+                bytesize=8,
+                parity="N",
+                stopbits=1,
+                timeout=0.5,
             )
-            self.__uart_i2c = UART_MODE
             if self.ser.isOpen == False:
                 self.ser.open()
+
         self.set_voice(1)  # Set volume(0-9)
 
     def speak(self, string):
@@ -119,11 +122,11 @@ class DFRobot_SpeechSynthesis(object):
             if result == 0x41:
                 break
         # time.sleep(1)
-        time.sleep(0.3)
+        time.sleep(0.1)
         while 1:
             check = [0xFD, 0x00, 0x01, 0x21]
             self.write_cmd(check)
-            time.sleep(0.1)
+            time.sleep(0.02)
             result = self.read_ack(1)
             if result == 0x4F:
                 break
@@ -297,9 +300,8 @@ class DFRobot_SpeechSynthesis(object):
 
 
 class DFRobot_SpeechSynthesis_I2C(DFRobot_SpeechSynthesis):
-    def __init__(self, bus, addr):
-        self.__addr = addr
-        # print(self.__addr)
+    def __init__(self, bus, addr=I2C_ADDR):
+        self._addr = addr
         super(DFRobot_SpeechSynthesis_I2C, self).__init__(bus, 0)
 
     def write_cmd(self, data):
@@ -310,18 +312,15 @@ class DFRobot_SpeechSynthesis_I2C(DFRobot_SpeechSynthesis):
         max_block_size = 32
         for i in range(0, len(data), max_block_size):
             end_index = min(i + max_block_size, len(data))
-            current_block = data[i:end_index]
-            self.i2cbus.write_block_data(self.__addr, 0, current_block)
-        # print(data)
-
-        # self.i2cbus.write_block_data(self.__addr, 0x1, data)
+            write_msg = i2c_msg.write(self._addr, data[i:end_index])
+            self._i2c.i2c_rdwr(write_msg)
 
     def read_ack(self, len):
         """
         @brief read the data from the register
         """
         try:
-            rslt = self.i2cbus.read_byte(self.__addr)
+            rslt = self._i2c.read_byte(self._addr)
         except:
             rslt = -1
         return rslt
@@ -346,16 +345,10 @@ class DFRobot_SpeechSynthesis_UART(DFRobot_SpeechSynthesis):
         """
         @brief read the data from the register
         """
-        # timenow = time.time()
-        # recv = 0
-        # i = 0
-        # count = self.ser.inWaiting()
         a = [0]
         a[0] = self.ser.read(1)
-        # print(a[0])
         if a[0] == b"A":
             return 0x41
         if a[0] == b"O":
             return 0x4F
-        # self.ser.flushInput()
         return a[0]

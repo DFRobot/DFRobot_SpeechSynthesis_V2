@@ -25,11 +25,15 @@
 
 ## 库安装
 
-This Sensor should work with DFRobot_SpeechSynthesis on RaspberryPi. <br>
-Run the program:
+要使用这个库，首先要将库下载到Raspberry Pi，命令下载方法如下: <br>
+```python
+  sudo git clone https://github.com/DFRobot/DFRobot_SpeechSynthesis_V2
+  pip install smbus2
+```
 
+运行例程:
 ```python 
- python Speech_Synthesis.py
+  python Speech_Synthesis.py
 ```
 
 ## 方法
@@ -89,6 +93,7 @@ Run the program:
 ## History
 
 - 2021/08/12 - 1.0.0 版本
+- 2024/05/20 - 1.0.1 版本
 
 
 ## Credits

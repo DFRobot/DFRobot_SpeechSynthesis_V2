@@ -27,11 +27,17 @@ Would you like to add voice to your projects? Connect up this Speech Synthesis m
 
 ## Installation
 
-This Sensor should work with DFRobot_SpeechSynthesis on RaspberryPi. <br>
+Download the library to Raspberry Pi first before use.<br>
+
+```python
+  sudo git clone https://github.com/DFRobot/DFRobot_SpeechSynthesis_V2
+  pip install smbus2
+```
+
 Run the program:
 
 ```python
-speech_synthesis.py
+  python speech_synthesis.py
 ```
 
 ## Methods
@@ -91,6 +97,8 @@ speech_synthesis.py
 ## History
 
 - 2020/12/06 - Version 1.0.0 released.
+- 2024/05/20 - Version 1.0.1 released.
+
 ## Credits
 
 Written by fengli(li.feng@dfrobot.com), 2020.11.6 (Welcome to our [website](https://www.dfrobot.com/))

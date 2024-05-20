@@ -28,6 +28,7 @@ alcohol.set_voice(9)  # Set volume(0-9)
 alcohol.set_speed(5)  # Set playback speed (0-9)
 alcohol.set_tone(5)  # Set tone(0-9)
 alcohol.set_english_pron(WORD)  # Set word synthesis mode /WORD/ALPHABET
+
 while True:
     alcohol.speak("i have a book")
     alcohol.speak("She sells seashells by the seashore")
