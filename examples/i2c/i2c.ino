@@ -16,20 +16,20 @@ void setup() {
   //Init speech synthesis sensor
   ss.begin();
   //Set voice volume to 5
-  //ss.setVolume(5);
+  ss.setVolume(9);
   //Set playback speed to 5
-  //ss.setSpeed(5);
+  ss.setSpeed(5);
   //Set tone to 5
-  //ss.setTone(5);
+  ss.setTone(5);
   //For English, speak word 
-  //ss.setEnglishPron(ss.WORD);
+  ss.setEnglishPron(ss.eWord);
 }
 
 void loop() {
   ss.speak(F("She sells seashells by the seashore"));
+  ss.speak(F("Hello, I'm Speech Synthesis module"));
+  ss.speak(F("a b c d e f g"));
   delay(1000);
-  // ss.speak(F("Hello, I'm Speech Synthesis module"));
-  // ss.speak(F("a b c d e f g"));
 
   /*Use text control identifier*/
   //Voice volume identifier 
