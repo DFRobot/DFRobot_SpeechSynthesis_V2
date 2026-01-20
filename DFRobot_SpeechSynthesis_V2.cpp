@@ -196,130 +196,185 @@ void DFRobot_SpeechSynthesis::reset()
 
 void DFRobot_SpeechSynthesis::speak(String word)
 {
-  //DBG("String");
-  uint32_t uni = 0;
-  uint8_t utf8State = 0;
-  DBG("\n");
-  uint16_t point = 0;
+  // 清理之前的内存和状态（确保每次调用都是干净的状态）
   if (_utf8 != NULL) {
     free(_utf8);
     _utf8 = NULL;
-  }DBG("\n");
-  _len = word.length(); //总长度
+  }
+  if (_unicode != NULL) {
+    free(_unicode);
+    _unicode = NULL;
+  }
+  
+  // 重置所有状态变量（避免上次调用的状态残留）
+  _index = 0;
+  _len = 0;
+  curState = eNone;
+  lastState = eNone;
+  lanChange = false;
+  
+  // 获取输入长度
+  _len = word.length();
+  if (_len == 0) {
+    return; // 空字符串直接返回
+  }
+  
+  // 分配UTF-8缓冲区
   _utf8 = (uint8_t*)malloc(_len + 1);
   if (_utf8 == NULL) {
     DBG("no memory");
     return;
   }
-  DBG("_len=");DBG(_len);
-
-  for (uint32_t i = 0;i <= _len;i++) {
-    _utf8[i] = word[i]; //总的utf8码
-    //DBG(_utf8[i]);
+  
+  // 复制字符串数据（修正边界：使用 < 而不是 <=）
+  for (uint16_t i = 0; i < _len; i++) {
+    _utf8[i] = word[i];
   }
-  DBG("\n");
-  word = "";
+  _utf8[_len] = 0; // 添加结束符
+  
+  // 计算Unicode缓冲区大小
   uint16_t len1 = getWordLen();
   DBG("len1=");DBG(len1);
+  
+  // 分配Unicode缓冲区
   _unicode = (uint8_t*)malloc(len1 + 1);
+  if (_unicode == NULL) {
+    DBG("no memory for unicode");
+    free(_utf8);
+    _utf8 = NULL;
+    return;
+  }
+  
+  // 初始化局部变量
+  _index = 0; // 已在函数开始处重置，这里确保一致性
+  uint16_t point = 0;
+  uint32_t uni = 0;
+  
+  // 处理UTF-8字符
   while (_index < _len) {
-    if (_utf8[_index] >= 0xfc) {
-      utf8State = 5;
-      uni = _utf8[_index] & 1;
+    uint8_t firstByte = _utf8[_index];
+    uint8_t bytesToRead = 0;
+    bool isChinese = false;
+    bool isValid = true;
+    
+    // 判断UTF-8字符类型和字节数
+    if (firstByte >= 0xfc) {
+      // 6字节UTF-8（很少见，通常不支持）
+      bytesToRead = 6;
+      uni = firstByte & 1;
       _index++;
-      for (uint8_t i = 1;i <= 5;i++) {
+      for (uint8_t i = 1; i < 6 && _index < _len; i++) {
         uni <<= 6;
         uni |= (_utf8[_index] & 0x3f);
-        utf8State--;
         _index++;
       }
-
-    } else if (_utf8[_index] >= 0xf8) {
-      utf8State = 4;
-      uni = _utf8[_index] & 3;
+      isChinese = true;
+    } else if (firstByte >= 0xf8) {
+      // 5字节UTF-8（很少见，通常不支持）
+      bytesToRead = 5;
+      uni = firstByte & 3;
       _index++;
-      for (uint8_t i = 1;i <= 4;i++) {
+      for (uint8_t i = 1; i < 5 && _index < _len; i++) {
         uni <<= 6;
-        uni |= (_utf8[_index] & 0x03f);
-        utf8State--;
+        uni |= (_utf8[_index] & 0x3f);
         _index++;
       }
-
-    } else if (_utf8[_index] >= 0xf0) {
-      utf8State = 3;
-      uni = _utf8[_index] & 7;
+      isChinese = true;
+    } else if (firstByte >= 0xf0) {
+      // 4字节UTF-8（很少见，通常不支持）
+      bytesToRead = 4;
+      uni = firstByte & 7;
       _index++;
-      for (uint8_t i = 1;i <= 3;i++) {
+      for (uint8_t i = 1; i < 4 && _index < _len; i++) {
         uni <<= 6;
-        uni |= (_utf8[_index] & 0x03f);
-        utf8State--;
+        uni |= (_utf8[_index] & 0x3f);
         _index++;
       }
-      DBG(_index);DBG(uni);
-
-    } else if (_utf8[_index] >= 0xe0) {
+      isChinese = true;
+    } else if (firstByte >= 0xe0) {
+      // 3字节UTF-8（中文等）
+      bytesToRead = 3;
+      isChinese = true;
       curState = eChinese;
+      
       if ((curState != lastState) && (lastState != eNone)) {
         lanChange = true;
       } else {
-        utf8State = 2;
-        DBG("index=");DBG(_index);
-        uni = _utf8[_index] & 15;
+        uni = firstByte & 15;
         _index++;
-        DBG("uni=");DBG(uni);
-        for (uint8_t i = 1;i <= 2;i++) {
-          uni <<= 6;
-          uni |= (_utf8[_index] & 0x03f);
-          utf8State--;
-          _index++;
-        }
-        if (_utf8[_index] == 239) {
-          //DBG("aaaa");
+        if (_index >= _len) { isValid = false; break; }
+        uni <<= 6;
+        uni |= (_utf8[_index] & 0x3f);
+        _index++;
+        if (_index >= _len) { isValid = false; break; }
+        uni <<= 6;
+        uni |= (_utf8[_index] & 0x3f);
+        _index++;
+        
+        // 检查特殊字符（0xEF）
+        if (_index < _len && _utf8[_index] == 0xef) {
           lanChange = true;
         }
+        
         lastState = eChinese;
-        DBG(_index);DBG(uni);
         _unicode[point++] = uni & 0xff;
         _unicode[point++] = uni >> 8;
-        //if(point ==  24) lanChange = true;
       }
-    } else if (_utf8[_index] >= 0xc0) {
+    } else if (firstByte >= 0xc0) {
+      // 2字节UTF-8（部分中文）
+      bytesToRead = 2;
+      isChinese = true;
       curState = eChinese;
+      
       if ((curState != lastState) && (lastState != eNone)) {
         lanChange = true;
-
       } else {
-        utf8State = 1;
-        uni = _utf8[_index] & 0x1f;
+        uni = firstByte & 0x1f;
         _index++;
-        for (uint8_t i = 1;i <= 1;i++) {
-          uni <<= 6;
-          uni |= (_utf8[_index] & 0x03f);
-          utf8State--;
-          _index++;
-        }
+        if (_index >= _len) { isValid = false; break; }
+        uni <<= 6;
+        uni |= (_utf8[_index] & 0x3f);
+        _index++;
+        
         lastState = eChinese;
         _unicode[point++] = uni & 0xff;
         _unicode[point++] = uni >> 8;
-        //if(point ==  24) lanChange = true;
       }
-    } else if (_utf8[_index] <= 0x80) {
+    } else if (firstByte <= 0x7f) {
+      // 1字节ASCII（英文等）
+      bytesToRead = 1;
+      isChinese = false;
       curState = eEnglish;
+      
       if ((curState != lastState) && (lastState != eNone)) {
         lanChange = true;
-
       } else {
-        _unicode[point++] = (_utf8[_index] & 0x7f);
+        _unicode[point++] = firstByte & 0x7f;
         _index++;
         lastState = eEnglish;
-        if (/*(point ==  24) || */(_utf8[_index] == 0x20) || (_utf8[_index] == 0x2c)) lanChange = true;
+        
+        // 检查空格或逗号触发语言切换
+        if (_index < _len && (_utf8[_index] == 0x20 || _utf8[_index] == 0x2c)) {
+          lanChange = true;
+        }
       }
+    } else {
+      // 无效的UTF-8字节，跳过
+      _index++;
+      continue;
     }
-    if (lanChange == true) {
-      if (lastState == eChinese) {
+    
+    // 如果数据无效，跳出循环
+    if (!isValid) {
+      break;
+    }
+    
+    // 处理语言切换
+    if (lanChange) {
+      if (lastState == eChinese && point > 0) {
         sendPack(START_SYNTHESIS, _unicode, point);
         wait();
-      } else if (lastState == eEnglish) {
+      } else if (lastState == eEnglish && point > 0) {
         sendPack(START_SYNTHESIS1, _unicode, point);
         wait();
       }
@@ -329,43 +384,57 @@ void DFRobot_SpeechSynthesis::speak(String word)
       lanChange = false;
     }
   }
-  if (lastState == eChinese) {
-    sendPack(START_SYNTHESIS, _unicode, point);
-    wait();
-  } else if (lastState == eEnglish) {
-    sendPack(START_SYNTHESIS1, _unicode, point);
-    wait();
+  
+  // 发送剩余数据
+  if (point > 0) {
+    if (lastState == eChinese) {
+      sendPack(START_SYNTHESIS, _unicode, point);
+      wait();
+    } else if (lastState == eEnglish) {
+      sendPack(START_SYNTHESIS1, _unicode, point);
+      wait();
+    }
   }
+  
+  // 清理状态（确保状态完全重置，避免影响下次调用）
   lastState = eNone;
   curState = eNone;
-  point = 0;
   lanChange = false;
-
   _index = 0;
   _len = 0;
-
+  
+  // 释放内存（确保完全释放，避免内存泄漏）
   if (_unicode != NULL) {
     free(_unicode);
     _unicode = NULL;
   }
-  return;
-
+  if (_utf8 != NULL) {
+    free(_utf8);
+    _utf8 = NULL;
+  }
 }
 void DFRobot_SpeechSynthesis::wait()
 {
-  while (readACK() != 0x41)//等待语音合成完成
-  {
-    //if(readACK() == 0) break;
+  // 等待语音合成完成，添加超时保护
+  uint32_t timeout = millis() + 5000; // 5秒超时
+  while (readACK() != 0x41) {
+    if (millis() > timeout) {
+      DBG("wait synthesis timeout");
+      break; // 超时退出，避免无限等待
+    }
 #if (defined ESP8266)
     yield();
 #endif
   }
-  //DBG("NEXT--------------------------------0X41")
   delay(100);
 
-  while (1)//等待语音播放完成
-  {
-    //delay(20);
+  // 等待语音播放完成，添加超时保护
+  timeout = millis() + 10000; // 10秒超时（播放可能需要更长时间）
+  while (1) {
+    if (millis() > timeout) {
+      DBG("wait playback timeout");
+      break; // 超时退出，避免无限等待
+    }
     uint8_t check[4] = { 0xFD,0x00,0x01,0x21 };
     sendCommand(check, 4);
 #if (defined ESP8266)
@@ -374,15 +443,6 @@ void DFRobot_SpeechSynthesis::wait()
     if (readACK() == 0x4f) break;
     delay(20);
   }
-
-  /*
-readACK();
-readACK();
-readACK();
-readACK();
-
-*/
-
 }
 uint16_t DFRobot_SpeechSynthesis::getWordLen()
 {
