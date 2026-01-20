@@ -196,7 +196,7 @@ void DFRobot_SpeechSynthesis::reset()
 
 void DFRobot_SpeechSynthesis::speak(String word)
 {
-  // 清理之前的内存和状态（确保每次调用都是干净的状态）
+  // Clean up previous memory and state (ensure each call starts with a clean state)
   if (_utf8 != NULL) {
     free(_utf8);
     _utf8 = NULL;
@@ -206,37 +206,37 @@ void DFRobot_SpeechSynthesis::speak(String word)
     _unicode = NULL;
   }
   
-  // 重置所有状态变量（避免上次调用的状态残留）
+  // Reset all state variables (avoid state residue from previous calls)
   _index = 0;
   _len = 0;
   curState = eNone;
   lastState = eNone;
   lanChange = false;
   
-  // 获取输入长度
+  // Get input length
   _len = word.length();
   if (_len == 0) {
-    return; // 空字符串直接返回
+    return; // Return directly for empty string
   }
   
-  // 分配UTF-8缓冲区
+  // Allocate UTF-8 buffer
   _utf8 = (uint8_t*)malloc(_len + 1);
   if (_utf8 == NULL) {
     DBG("no memory");
     return;
   }
   
-  // 复制字符串数据（修正边界：使用 < 而不是 <=）
+  // Copy string data (fix boundary: use < instead of <=)
   for (uint16_t i = 0; i < _len; i++) {
     _utf8[i] = word[i];
   }
-  _utf8[_len] = 0; // 添加结束符
+  _utf8[_len] = 0; // Add null terminator
   
-  // 计算Unicode缓冲区大小
+  // Calculate Unicode buffer size
   uint16_t len1 = getWordLen();
   DBG("len1=");DBG(len1);
   
-  // 分配Unicode缓冲区
+  // Allocate Unicode buffer
   _unicode = (uint8_t*)malloc(len1 + 1);
   if (_unicode == NULL) {
     DBG("no memory for unicode");
@@ -245,21 +245,21 @@ void DFRobot_SpeechSynthesis::speak(String word)
     return;
   }
   
-  // 初始化局部变量
-  _index = 0; // 已在函数开始处重置，这里确保一致性
+  // Initialize local variables
+  _index = 0; // Already reset at function start, ensure consistency here
   uint16_t point = 0;
   uint32_t uni = 0;
   
-  // 处理UTF-8字符
+  // Process UTF-8 characters
   while (_index < _len) {
     uint8_t firstByte = _utf8[_index];
     uint8_t bytesToRead = 0;
     bool isChinese = false;
     bool isValid = true;
     
-    // 判断UTF-8字符类型和字节数
+    // Determine UTF-8 character type and byte count
     if (firstByte >= 0xfc) {
-      // 6字节UTF-8（很少见，通常不支持）
+      // 6-byte UTF-8 (rare, usually not supported)
       bytesToRead = 6;
       uni = firstByte & 1;
       _index++;
@@ -270,7 +270,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
       }
       isChinese = true;
     } else if (firstByte >= 0xf8) {
-      // 5字节UTF-8（很少见，通常不支持）
+      // 5-byte UTF-8 (rare, usually not supported)
       bytesToRead = 5;
       uni = firstByte & 3;
       _index++;
@@ -281,7 +281,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
       }
       isChinese = true;
     } else if (firstByte >= 0xf0) {
-      // 4字节UTF-8（很少见，通常不支持）
+      // 4-byte UTF-8 (rare, usually not supported)
       bytesToRead = 4;
       uni = firstByte & 7;
       _index++;
@@ -292,7 +292,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
       }
       isChinese = true;
     } else if (firstByte >= 0xe0) {
-      // 3字节UTF-8（中文等）
+      // 3-byte UTF-8 (Chinese, etc.)
       bytesToRead = 3;
       isChinese = true;
       curState = eChinese;
@@ -311,7 +311,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
         uni |= (_utf8[_index] & 0x3f);
         _index++;
         
-        // 检查特殊字符（0xEF）
+        // Check special character (0xEF)
         if (_index < _len && _utf8[_index] == 0xef) {
           lanChange = true;
         }
@@ -321,7 +321,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
         _unicode[point++] = uni >> 8;
       }
     } else if (firstByte >= 0xc0) {
-      // 2字节UTF-8（部分中文）
+      // 2-byte UTF-8 (partial Chinese)
       bytesToRead = 2;
       isChinese = true;
       curState = eChinese;
@@ -341,7 +341,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
         _unicode[point++] = uni >> 8;
       }
     } else if (firstByte <= 0x7f) {
-      // 1字节ASCII（英文等）
+      // 1-byte ASCII (English, etc.)
       bytesToRead = 1;
       isChinese = false;
       curState = eEnglish;
@@ -353,23 +353,23 @@ void DFRobot_SpeechSynthesis::speak(String word)
         _index++;
         lastState = eEnglish;
         
-        // 检查空格或逗号触发语言切换
+        // Check space or comma to trigger language switch
         if (_index < _len && (_utf8[_index] == 0x20 || _utf8[_index] == 0x2c)) {
           lanChange = true;
         }
       }
     } else {
-      // 无效的UTF-8字节，跳过
+      // Invalid UTF-8 byte, skip
       _index++;
       continue;
     }
     
-    // 如果数据无效，跳出循环
+    // If data is invalid, break loop
     if (!isValid) {
       break;
     }
     
-    // 处理语言切换
+    // Handle language switch
     if (lanChange) {
       if (lastState == eChinese && point > 0) {
         sendPack(START_SYNTHESIS, _unicode, point);
@@ -385,7 +385,7 @@ void DFRobot_SpeechSynthesis::speak(String word)
     }
   }
   
-  // 发送剩余数据
+  // Send remaining data
   if (point > 0) {
     if (lastState == eChinese) {
       sendPack(START_SYNTHESIS, _unicode, point);
@@ -396,14 +396,14 @@ void DFRobot_SpeechSynthesis::speak(String word)
     }
   }
   
-  // 清理状态（确保状态完全重置，避免影响下次调用）
+  // Clean up state (ensure state is completely reset to avoid affecting next call)
   lastState = eNone;
   curState = eNone;
   lanChange = false;
   _index = 0;
   _len = 0;
   
-  // 释放内存（确保完全释放，避免内存泄漏）
+  // Free memory (ensure complete release to avoid memory leaks)
   if (_unicode != NULL) {
     free(_unicode);
     _unicode = NULL;
@@ -415,12 +415,12 @@ void DFRobot_SpeechSynthesis::speak(String word)
 }
 void DFRobot_SpeechSynthesis::wait()
 {
-  // 等待语音合成完成，添加超时保护
-  uint32_t timeout = millis() + 5000; // 5秒超时
+  // Wait for speech synthesis to complete, add timeout protection
+  uint32_t timeout = millis() + 5000; // 5 second timeout
   while (readACK() != 0x41) {
     if (millis() > timeout) {
       DBG("wait synthesis timeout");
-      break; // 超时退出，避免无限等待
+      break; // Timeout exit, avoid infinite waiting
     }
 #if (defined ESP8266)
     yield();
@@ -428,12 +428,12 @@ void DFRobot_SpeechSynthesis::wait()
   }
   delay(100);
 
-  // 等待语音播放完成，添加超时保护
-  timeout = millis() + 10000; // 10秒超时（播放可能需要更长时间）
+  // Wait for speech playback to complete, add timeout protection
+  timeout = millis() + 10000; // 10 second timeout (playback may take longer)
   while (1) {
     if (millis() > timeout) {
       DBG("wait playback timeout");
-      break; // 超时退出，避免无限等待
+      break; // Timeout exit, avoid infinite waiting
     }
     uint8_t check[4] = { 0xFD,0x00,0x01,0x21 };
     sendCommand(check, 4);
